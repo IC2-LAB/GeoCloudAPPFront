@@ -1,8 +1,7 @@
 import axios from 'axios'
 import qs from 'qs'
-import {
-  SM4Util
-} from './sm4encry'
+import { SM4Util } from './sm4encry'
+import { SM4Util as SM4UtilBupt } from './sm4encry_bupt'
 import { getToken } from '@/utils/auth'
 import {
   Notification
@@ -165,7 +164,11 @@ function apiAxios (method = 'GET', url, params) {
       }
       if (res.status === 200) {
         if (res.data.decryptFlag && res.data.decryptFlag === true) {
-          res.data.data = JSON.parse(SM4Util.decryptData_ECB(res.data.data))
+          if (res.data.version && res.data.version.includes('bupt')) {
+            res.data = JSON.parse(SM4UtilBupt.decryptData_ECB(res.data.data))
+          } else {
+            res.data = JSON.parse(SM4Util.decryptData_ECB(res.data.data))
+          }
         } else if (!res.data.decryptFlag && res.data.decryptFlag === false) {
           res.data = res.data
         }

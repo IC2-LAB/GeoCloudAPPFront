@@ -40,7 +40,7 @@ export default {
   // 删除用户
   deleteTokenByUserName: (params) => http.postAxios('/mj/agrsOauthAccessTokenController/deleteTokenByUserID', params),
   // 获取城市级别联动
-  getAreaCode: (params) => http.getAxios('/mj/agrsArea/get', params),
+  getAreaCode: (params) => http.getAxios('/bupt/agrsArea/get', params),
   findQuery: (params) => http.postAxios('/mj/agrsQueryModuleSpatial/findAgrsPageList', params),
   // 查询接口
   findPageQueryByNodes: (params) => http.postAxios('/mj/agrsQueryModuleSpatial/findAgrsPageListNodes', params),
