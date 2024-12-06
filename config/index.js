@@ -10,6 +10,9 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
+      '/bupt': {
+        target: 'http://10.82.8.64:12345',
+      },
       '/system': {
         //target: 'http://10.1.3.90:8084/',//海南农保
         //target: 'http://10.1.3.66:10082/',//海南农保

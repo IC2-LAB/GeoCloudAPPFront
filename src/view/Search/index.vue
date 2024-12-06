@@ -1066,7 +1066,7 @@ export default {
       const [start, end] = date
       this.showPickerDate = false
       this.startendTime = [this.timestampToTime(start), this.timestampToTime(end)]
-      alert(this.startendTime)
+      // alert(this.startendTime)
       // this.date = `${this.formatDate(start)} - ${this.formatDate(end)}`
     },
     formatDate(date) {
