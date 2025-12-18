@@ -24,13 +24,36 @@
       <!--<img src="../../assets/images/search/position.png"/>
       <img src="../../assets/images/search/fresh.png"/>-->
     </div>
+    <!-- 检索条件展示透明框 -->
+    <div class="search-conditions-panel" v-if="hasSearchConditions && showConditionsPanel">
+      <div class="conditions-content">
+        <div class="condition-item" v-if="displaySensor">
+          <span class="condition-label">传感器：</span>
+          <span class="condition-value">{{ displaySensor }}</span>
+        </div>
+        <div class="condition-item" v-if="displayTimeRange">
+          <span class="condition-label">时间范围：</span>
+          <span class="condition-value">{{ displayTimeRange }}</span>
+        </div>
+        <div class="condition-item" v-if="displayCloud">
+          <span class="condition-label">云量：</span>
+          <span class="condition-value">{{ displayCloud }}</span>
+        </div>
+      </div>
+    </div>
     <van-popup v-model="show" round position="bottom" :style="{ height: '70%' }">
       <van-loading style="height: 70%;z-index: 99;position: absolute;top: 35%;left: 45%;" vertical color="#303030"
         size="2rem" v-show="loading">加载中...
       </van-loading>
-      <van-cascader v-model="cascaderValue" title="请选择所在地区" :options="opintion" @close="show = false" @finish="onFinish"
-        @change="onChange" />
-      <van-button type="primary" size="large" @click="onAreaChange">完成</van-button>
+      <div class="popup-content-wrapper">
+        <div class="popup-content-scroll">
+          <van-cascader v-model="cascaderValue" title="请选择所在地区" :options="opintion" @close="show = false" @finish="onFinish"
+            @change="onChange" />
+        </div>
+        <div class="popup-button-wrapper">
+          <van-button type="primary" size="large" @click="onAreaChange">完成</van-button>
+        </div>
+      </div>
     </van-popup>
     <van-popup v-model="showPickerDate" position="bottom" :style="{ height: '80%' }">
       <!-- 添加按钮容器 -->
@@ -45,13 +68,25 @@
         @confirm="onConfirm" :min-date="minDate" :max-date="maxDate" ref="calendar" :style="{ height: '90%' }" />
     </van-popup>
     <van-popup v-model="showCloudPicker" round position="bottom" :style="{ height: '30%' }">
-      <van-stepper style="line-height: 100px;margin-left: 100px;" v-model="cloudPrecent" input-width="40px"
-        button-size="32px" @change="cloudChange" />
-      <van-button round type="info" style="margin-left: 125px;" @click="showCloudPicker = false">确定</van-button>
+      <div class="popup-content-wrapper">
+        <div class="popup-content-scroll cloud-stepper-container">
+          <van-stepper v-model="cloudPrecent" input-width="40px"
+            button-size="32px" @change="cloudChange" />
+        </div>
+        <div class="popup-button-wrapper">
+          <van-button type="info" size="large" @click="showCloudPicker = false">确定</van-button>
+        </div>
+      </div>
     </van-popup>
     <van-popup v-model="showPicker" round position="bottom" :style="{ height: '60%' }">
-      <van-tree-select :items="items" :active-id.sync="activeIds" :main-active-index.sync="activeIndex" />
-      <van-button type="primary" size="large" @click="onPoliceClick">完成</van-button>
+      <div class="popup-content-wrapper">
+        <div class="popup-content-scroll">
+          <van-tree-select :items="items" :active-id.sync="activeIds" :main-active-index.sync="activeIndex" />
+        </div>
+        <div class="popup-button-wrapper">
+          <van-button type="primary" size="large" @click="onPoliceClick">完成</van-button>
+        </div>
+      </div>
     </van-popup>
     <!--结果列表界面-->
     <div class="resultContent" v-if="state">
@@ -69,7 +104,7 @@
         </div>
         <!--商品-->
         <div class="shopIten">
-          <div class="shopItem" v-for="item in tableData" style="margin-top: 0.1rem">
+          <div class="shopItem" v-for="item in tableData" :key="item.F_DATAID || item.F_DID" style="margin-top: 0.1rem">
             <div class="ShopImge">
               <van-checkbox :disabled="item.isShop" v-model="item.isSelect" icon-size="100%">
               </van-checkbox>
@@ -200,10 +235,52 @@ export default {
       cascaderValue: '',
       opintion: [],
       country: '',
-      state: true
+      state: true,
+      showConditionsPanel: true // 控制检索条件浮窗显示
+    }
+  },
+  computed: {
+    // 是否有检索条件
+    hasSearchConditions() {
+      return this.displayArea || this.displaySensor || this.displayTimeRange || this.displayCloud
+    },
+    // 显示行政区
+    displayArea() {
+      return this.fieldValue || ''
+    },
+    // 显示传感器
+    displaySensor() {
+      if (this.activeIds.length === 0) return ''
+      // 从items中查找传感器名称
+      const sensorNames = []
+      this.items.forEach(category => {
+        if (category.children) {
+          category.children.forEach(sensor => {
+            if (this.activeIds.includes(sensor.id)) {
+              sensorNames.push(sensor.text)
+            }
+          })
+        }
+      })
+      return sensorNames.length > 0 ? sensorNames.join('、') : '已选择'
+    },
+    // 显示时间范围
+    displayTimeRange() {
+      if (this.startendTime && this.startendTime.length === 2) {
+        return `${this.startendTime[0]} 至 ${this.startendTime[1]}`
+      }
+      return ''
+    },
+    // 显示云量
+    displayCloud() {
+      if (this.cloudPrecent !== undefined && this.cloudPrecent !== null) {
+        return `≤${this.cloudPrecent}%`
+      }
+      return ''
     }
   },
   methods: {
+
     quickSelect(type) {
       this.$refs.calendar.reset(this.dateRangeOptions[type])
     },
@@ -1397,5 +1474,99 @@ export default {
   display: flex;
   justify-content: space-around;
   padding: 5px;
+}
+
+.button-container .van-button {
+  font-size: 10px;
+}
+
+/* 弹窗内容包装器 - 使用 flex 布局确保按钮固定在底部 */
+.popup-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 弹窗内容滚动区域 - 占据剩余空间，内容可滚动 */
+.popup-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 弹窗按钮容器 - 固定在底部，不会因内容滚动而消失 */
+.popup-button-wrapper {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  background-color: #fff;
+  border-top: 1px solid #ebedf0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.popup-button-wrapper .van-button {
+  width: 100%;
+  margin: 0;
+}
+
+/* 云量调节组件容器 - 居中显示 */
+.cloud-stepper-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* 检索条件展示透明框 */
+.search-conditions-panel {
+  position: fixed;
+  bottom: 60px;
+  left: 10px;
+  width: calc(50% - 15px);
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  z-index: 4;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.conditions-content {
+  padding: 8px 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.condition-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  font-size: 12px;
+}
+
+.condition-item:last-child {
+  margin-bottom: 0;
+}
+
+.condition-label {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+.condition-value {
+  color: #fff;
+  word-break: break-all;
+  flex: 1;
 }
 </style>
